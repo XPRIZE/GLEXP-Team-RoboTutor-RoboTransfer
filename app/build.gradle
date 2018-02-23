@@ -1,0 +1,60 @@
+
+apply plugin: 'com.android.application'
+
+android {
+
+    compileSdkVersion 24
+    buildToolsVersion '26.0.2'
+    defaultConfig {
+        applicationId "cmu.xprize.testftp"
+        minSdkVersion 22
+        targetSdkVersion 22
+        versionCode 1
+        versionName "1.0"
+    }
+
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    def keystoreProperties = new Properties()
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+
+    signingConfigs {
+        config {
+            keyAlias keystoreProperties.getProperty('keyAlias')
+            keyPassword keystoreProperties.getProperty('keyPassword')
+            storeFile file(keystoreProperties.getProperty('storeFile'))
+            storePassword keystoreProperties.getProperty('storePassword')
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            signingConfig signingConfigs.config
+        }
+
+        xprize {
+            signingConfig signingConfigs.config
+
+            debuggable true
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+
+            def appName = "FTPConnect"
+            def buildType = variant.variantData.variantConfiguration.buildType.name
+            output.outputFileName = appName + "-" + buildType + ".apk"
+
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:appcompat-v7:22.2.1'
+    compile project(':service_ftp')
+}

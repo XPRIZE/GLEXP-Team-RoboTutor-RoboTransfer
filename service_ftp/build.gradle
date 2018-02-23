@@ -1,0 +1,44 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 24
+
+    defaultConfig {
+        minSdkVersion 22
+        targetSdkVersion 22
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    publishNonDefault true
+
+    buildTypes {
+        debug {
+            buildConfigField "String", "FTP_CONFIG", "\"KEVIN_LOCAL_FTP\""
+            debuggable true
+        }
+
+        xprize {
+            buildConfigField "String", "FTP_CONFIG", "\"XPRIZE_FIELD_FTP\""
+
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile files('libs/commons-net-3.3.jar')
+    compile 'com.android.support:appcompat-v7:22.2.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+}
