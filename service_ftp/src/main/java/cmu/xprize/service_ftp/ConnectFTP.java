@@ -31,6 +31,8 @@ public class ConnectFTP {
 
     public ConnectFTP() {
         mFtpClient = new FTPClient();
+        this.mFtpClient.setConnectTimeout(CONNECT_TIMEOUT_IN_MS); // make sure our FTP connection doesn't hang
+        this.mFtpClient.setDataTimeout(CONNECT_TIMEOUT_IN_MS);
     }
 
     /**
@@ -47,7 +49,7 @@ public class ConnectFTP {
         boolean status = false;
 
         try {
-            mFtpClient.connect(ip, port); // TODO is port optional?
+            mFtpClient.connect(ip, port);
             status = mFtpClient.login(username, password);
         } catch (IOException e) {
             Log.w(TAG, "No FTP connection found");
@@ -70,6 +72,7 @@ public class ConnectFTP {
             mFtpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
             boolean dirExists = mFtpClient.changeWorkingDirectory(location);
+            Log.w(TAG, "In directory: " + mFtpClient.printWorkingDirectory());
             if(!dirExists) {
                 boolean dirCreated = mFtpClient.makeDirectory(location);
 
@@ -93,8 +96,6 @@ public class ConnectFTP {
             Log.i(TAG, dir);
             FileInputStream srcFileStream = new FileInputStream(file);
 
-            // TODO this should be written to a specified directory, not just the same name as the file
-            //String writeTo = location + File.separator + file.getName();
             String writeTo = location + File.separator + file.getName();
 
             boolean status = mFtpClient.storeFile(writeTo, srcFileStream);
