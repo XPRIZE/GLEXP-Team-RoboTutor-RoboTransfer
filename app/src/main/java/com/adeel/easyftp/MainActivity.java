@@ -28,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     String reallyLongFileOutput;
-    private FTP_CONST.FtpConfigProfile mFtpProfile;
 
     // CONFIG
     private static final boolean DEBUG_NOTIFICATIONS = false;
@@ -38,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.notification_tester);
+        setContentView(R.layout.add_file_tester);
 
         SMainLayout = (LinearLayout) findViewById(R.id.SMainLayout);
 
@@ -49,15 +48,6 @@ public class MainActivity extends AppCompatActivity {
         if (START_SERVICES) {
             startServices();
         }
-
-        // Check the build config to determine which FTP we should connect to
-        if (cmu.xprize.service_ftp.BuildConfig.FTP_CONFIG.equals("KEVIN_LOCAL_FTP")) {
-            mFtpProfile = FTP_CONST.KEVIN_LOCAL_FTP;
-
-        } else if (cmu.xprize.service_ftp.BuildConfig.FTP_CONFIG.equals("XPRIZE_FIELD_FTP")) {
-            mFtpProfile = FTP_CONST.XPRIZE_FIELD_FTP;
-        }
-
     }
 
     private void startServices() {
@@ -65,31 +55,45 @@ public class MainActivity extends AppCompatActivity {
         startService(new Intent(this, WifiFTPBackgroundService.class));
 
         //startService(new Intent(this, FTPService.class));
-        startService(new Intent(this, LogFileWriterService.class));
+        //startService(new Intent(this, LogFileWriterService.class));
     }
 
 
     /* Log file creation tester */
-    public void createLogFile(View v) {
+    public void createLocalLogFiles(View v) {
 
-        writeLogFile(1);
+        writeLogFile("local", 3);
     }
 
     /* More log file creation tester */
-    public void createTenLogFiles(View v) {
-        writeLogFile(10);
+    public void createRemoteLogFiles(View v) {
+        writeLogFile("remote", 3);
 
     }
 
-    private void writeLogFile(int count) {
+    private void writeLogFile(String folder, int count) {
         generateReallyLongString();
+
+        String folderName;
+        switch(folder) {
+
+            case "remote":
+                folderName = getResources().getString(R.string.remote_output);
+                break;
+
+            case "local":
+            default:
+                folderName = getResources().getString(R.string.local_output);
+                break;
+
+        }
 
         for (int i=0; i < count; i++) {
             try {
 
                 String filename = "FAKE_" + System.currentTimeMillis() + ".txt";
                 // create new directory if it doesn't exist
-                String logDirectory = Environment.getExternalStorageDirectory() + File.separator + mFtpProfile.folderPairs.get(0).source;
+                String logDirectory = Environment.getExternalStorageDirectory() + File.separator + folderName;
                 File directory = new File(logDirectory);
                 if (!directory.exists()) {
                     boolean success = directory.mkdir();

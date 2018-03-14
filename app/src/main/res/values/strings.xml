@@ -7,4 +7,8 @@
     <string name="channel_name">FTP Channel</string>
     <string name="channel_description">For FTP events</string>
     <string name="notification_tag">notification_tag</string>
+
+    <string name="accel_output">ftp_transfer/local</string>
+    <string name="remote_output">ftp_transfer/remote</string>
+    <string name="local_output">ftp_transfer/local</string>
 </resources>

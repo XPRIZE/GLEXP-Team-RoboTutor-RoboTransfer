@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="address">128.237.127.170</string>
+    <string name="user">ftp</string>
+    <string name="pw">ftp</string>
+    <integer name="port">2121</integer>
+
+    <string-array name="in_dir">
+        <item>ftp_transfer/local</item>
+        <item>ftp_transfer/remote</item>
+    </string-array>
+
+    <string-array name="out_dir">
+        <item>local</item>
+        <item>remote</item>
+    </string-array>
+</resources>

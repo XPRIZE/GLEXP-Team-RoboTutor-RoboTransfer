@@ -23,11 +23,12 @@ public class LogFileWriterService extends Service implements SensorEventListener
     private SensorManager sensorManager;
     private Sensor senAccel;
 
-    private FTP_CONST.FtpConfigProfile mFtpProfile;
     private String logLocation;
 
     FileWriter logWriter;
 
+    public static final String FOLDER_NAME = "ftp_transfer"; // TODO how can we make this configgable?
+    private static final String LOG_FILE_LOCATION = Environment.getExternalStorageDirectory().getPath() + File.separator + FOLDER_NAME + File.separator;
 
     private static final String TAG = "LogFileWriterService";
 
@@ -46,21 +47,15 @@ public class LogFileWriterService extends Service implements SensorEventListener
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand");
-        Log.d(TAG, "will write to " + FTP_CONST.LOG_FILE_LOCATION);
+        Log.d(TAG, "will write to " + LOG_FILE_LOCATION);
 
         // register sensor things
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senAccel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, senAccel, SensorManager.SENSOR_DELAY_NORMAL);
 
-        // Check the build config to determine which FTP we should connect to
-        if (cmu.xprize.service_ftp.BuildConfig.FTP_CONFIG.equals("KEVIN_LOCAL_FTP")) {
-            mFtpProfile = FTP_CONST.KEVIN_LOCAL_FTP;
-
-        } else if (cmu.xprize.service_ftp.BuildConfig.FTP_CONFIG.equals("XPRIZE_FIELD_FTP")) {
-            mFtpProfile = FTP_CONST.XPRIZE_FIELD_FTP;
-        }
-        logLocation = Environment.getExternalStorageDirectory() + File.separator + mFtpProfile.folderPairs.get(0).source;
+        String logOutput = getResources().getString(R.string.accel_output);
+        logLocation = Environment.getExternalStorageDirectory() + File.separator + logOutput;
 
         return super.onStartCommand(intent, flags, startId);
     }

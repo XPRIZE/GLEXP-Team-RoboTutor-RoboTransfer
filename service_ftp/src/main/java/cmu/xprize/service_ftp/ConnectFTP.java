@@ -1,13 +1,17 @@
 package cmu.xprize.service_ftp;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 /**
  * ConnectFTP
@@ -23,10 +27,10 @@ public class ConnectFTP {
     private static final String TAG = "ConnectFTP";
 
     private FTPClient mFtpClient = null;
+    private Context mContext = null;
 
     public ConnectFTP() {
         mFtpClient = new FTPClient();
-        this.mFtpClient.setConnectTimeout(CONNECT_TIMEOUT_IN_MS);
     }
 
     /**
@@ -73,14 +77,24 @@ public class ConnectFTP {
                     Log.d(TAG, "Directory created: " + location);
                 } else {
                     Log.w(TAG, "Could not create directory: " + location);
-                    return false;
+                    //return false;
                 }
+            } else {
+                // screwy logic... go back up to parent directory
+                mFtpClient.changeToParentDirectory();
             }
 
 
+            String dir = mFtpClient.printWorkingDirectory();
+            FTPFile[] dirs = mFtpClient.listDirectories();
+            for (FTPFile ftpDir : dirs) {
+                Log.d(TAG, ftpDir.getName());
+            }
+            Log.i(TAG, dir);
             FileInputStream srcFileStream = new FileInputStream(file);
 
             // TODO this should be written to a specified directory, not just the same name as the file
+            //String writeTo = location + File.separator + file.getName();
             String writeTo = location + File.separator + file.getName();
 
             boolean status = mFtpClient.storeFile(writeTo, srcFileStream);

@@ -8,14 +8,14 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="CREATE LOG FILE"
-        android:onClick="createLogFile"/>
+        android:text="CREATE 10 LOCAL LOG FILES"
+        android:onClick="createLocalLogFiles"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="CREATE 10 LOG FILES"
-        android:onClick="createTenLogFiles"/>
+        android:text="CREATE 10 REMOTE LOG FILES"
+        android:onClick="createRemoteLogFiles"/>
 
 
 

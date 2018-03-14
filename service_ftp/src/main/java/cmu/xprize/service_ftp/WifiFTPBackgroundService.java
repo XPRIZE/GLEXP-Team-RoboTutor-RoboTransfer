@@ -29,12 +29,24 @@ public class WifiFTPBackgroundService extends Service {
     private static Timer timer = new Timer();
     private MyNotificationManager mNotifyManager;
     private ConnectFTP mConnectFTP;
-    private FTP_CONST.FtpConfigProfile mFtpProfile;
 
     // if it's already running, don't start another service
     private boolean isUploading = false;
 
     private static final String TAG = "WifiFTPService";
+
+    static final long BACKGROUND_CHECK_DELAY = 0;
+    static final long BACKGROUND_CHECK_PERIOD = 5000;
+
+    String address;
+    String user;
+    String pw;
+    int port;
+
+    String[] in_dir;
+    String[] out_dir;
+
+
 
     public WifiFTPBackgroundService() {
     }
@@ -53,17 +65,17 @@ public class WifiFTPBackgroundService extends Service {
         mNotifyManager = new MyNotificationManager(this);
         mConnectFTP = new ConnectFTP();
 
-        // Check the build config to determine which FTP we should connect to
-        if (BuildConfig.FTP_CONFIG.equals("KEVIN_LOCAL_FTP")) {
-            mFtpProfile = FTP_CONST.KEVIN_LOCAL_FTP;
+        address = getResources().getString(R.string.address);
+        user    = getResources().getString(R.string.user);
+        pw = getResources().getString(R.string.pw);
+        port = getResources().getInteger(R.integer.port);
 
-        } else if (BuildConfig.FTP_CONFIG.equals("XPRIZE_FIELD_FTP")) {
-            mFtpProfile = FTP_CONST.XPRIZE_FIELD_FTP;
-        }
+        in_dir = getResources().getStringArray(R.array.in_dir);
+        out_dir = getResources().getStringArray(R.array.out_dir);
 
 
         // STEP 2 a new "CheckConnectionsTask" is run periodically
-        timer.scheduleAtFixedRate(new CheckConnectionsTask(), FTP_CONST.BACKGROUND_CHECK_DELAY, FTP_CONST.BACKGROUND_CHECK_PERIOD);
+        timer.scheduleAtFixedRate(new CheckConnectionsTask(), BACKGROUND_CHECK_DELAY, BACKGROUND_CHECK_PERIOD);
 
 
         return super.onStartCommand(intent, flags, startId);
@@ -92,37 +104,46 @@ public class WifiFTPBackgroundService extends Service {
                 mNotifyManager.issueNotification(MyNotificationManager.WIFI_CONNECTION, wifiName);
 
                 // STEP 5 checks for FTP connection
-                boolean connected = mConnectFTP.connect(mFtpProfile.address, mFtpProfile.user, mFtpProfile.pw, mFtpProfile.port);
+                boolean connected = mConnectFTP.connect(address, user, pw, port);
                 if(connected) {
                     Log.d(TAG, "Connected to FTP");
-                    mNotifyManager.issueNotification(MyNotificationManager.FTP_CONNECTION, mFtpProfile.address);
+                    mNotifyManager.issueNotification(MyNotificationManager.FTP_CONNECTION, address);
+
+                    ArrayList<FilePair> filePairs = new ArrayList<>();
 
                     // STEP 6 checks for files
-                    // TODO could still be null???
-                    String logLocation = mFtpProfile.folderPairs.get(0).source;
-                    File directory = new File(Environment.getExternalStorageDirectory() + File.separator + logLocation);
-                    // create if it doesn't already exist
-                    if (!directory.exists()) {
-                        boolean success = directory.mkdir();
-                        Log.d(TAG, (success ? "success" : "failure") + " creating new directory... " + directory.getName());
-                        return;
+                    for (int i=0; i < in_dir.length; i++) {
+
+                        String inLocation = in_dir[i];
+
+                        File directory = new File(Environment.getExternalStorageDirectory() + File.separator + inLocation);
+                        // create if it doesn't already exist
+                        if (!directory.exists()) {
+                            boolean success = directory.mkdir();
+                            Log.d(TAG, (success ? "success" : "failure") + " creating new directory... " + directory.getName());
+                            return;
+                        }
+
+                        File[] filesArray = directory.listFiles();
+
+                        if(filesArray == null || filesArray.length ==0) {
+                            break;
+                        }
+
+                        for (File f : filesArray) {
+                            // don't add directories, just files...
+                            if (f.isFile()) {
+                                filePairs.add(new FilePair(f, out_dir[i]));
+                            }
+                        }
+
                     }
-                    File[] filesArray = directory.listFiles();
-                    if(filesArray == null || filesArray.length ==0) {
-                        return;
-                    }
-
-                    ArrayList<File> files = new ArrayList<>(filesArray.length);
-
-                    for (File f : filesArray) {
-                        files.add(f);
-                    }
 
 
-                    if (files != null && files.size() > 0) {
-                        mNotifyManager.issueNotification(MyNotificationManager.FOUND_FILES, String.valueOf(files.size()));
+                    if (filePairs != null && filePairs.size() > 0) {
+                        mNotifyManager.issueNotification(MyNotificationManager.FOUND_FILES, String.valueOf(filePairs.size()));
                         // STEP 7 begin transferring files
-                        beginFileTransfer(files);
+                        beginFileTransfer(filePairs);
                     }
 
 
@@ -137,23 +158,23 @@ public class WifiFTPBackgroundService extends Service {
         }
     }
 
-    private void beginFileTransfer(List<File> files) {
+    private void beginFileTransfer(List<FilePair> filePairs) {
 
         isUploading = true;
 
-        File f = files.remove(0);
+        FilePair fp = filePairs.remove(0);
         // STEP 8 call an "UploadTask"
-        UploadTask asyncTask = new UploadTask(f, files);
+        UploadTask asyncTask = new UploadTask(fp, filePairs);
         asyncTask.execute();
 
     }
 
     class UploadTask extends AsyncTask<Boolean, Integer, Boolean> {
 
-        File f;
-        List<File> nextFiles;
+        FilePair fp;
+        List<FilePair> nextFilePairs;
 
-        UploadTask(File f, List<File> nextFiles) {this.f = f; this.nextFiles = nextFiles;}
+        UploadTask(FilePair fp, List<FilePair> nextFilePairs) {this.fp = fp; this.nextFilePairs = nextFilePairs;}
 
         /**
          * STEP 9 run "doInBackground" method of UploadTask
@@ -162,11 +183,11 @@ public class WifiFTPBackgroundService extends Service {
          */
         @Override
         protected Boolean doInBackground(Boolean... booleans) {
-            Log.w(TAG, "UploadTask.doInBackgrond... " + f.getName());
-            mNotifyManager.issueNotification(MyNotificationManager.UPLOADING, f.getName());
+            Log.w(TAG, "UploadTask.doInBackgrond...  writing " + fp.f.getName() + " to " + fp.out_dir);
+            mNotifyManager.issueNotification(MyNotificationManager.UPLOADING, fp.f.getName());
 
 
-            boolean uploaded = mConnectFTP.uploadFile(f, mFtpProfile.folderPairs.get(0).dest);
+            boolean uploaded = mConnectFTP.uploadFile(fp.f, fp.out_dir);
 
 
             return uploaded;
@@ -182,15 +203,15 @@ public class WifiFTPBackgroundService extends Service {
             Log.w(TAG, "UploadTask.onPostExecute..." + result);
 
             if(result) {
-                mNotifyManager.issueNotification(MyNotificationManager.DONE_UPLOADING, f.getName());
-                f.delete();
+                mNotifyManager.issueNotification(MyNotificationManager.DONE_UPLOADING, fp.f.getName());
+                fp.f.delete();
             }
 
-            if(nextFiles.isEmpty()) {
+            if(nextFilePairs.isEmpty()) {
                 isUploading = false;
             } else {
-                File nextF = nextFiles.remove(0);
-                UploadTask newUpload = new UploadTask(nextF, nextFiles);
+                FilePair nextFp = nextFilePairs.remove(0);
+                UploadTask newUpload = new UploadTask(nextFp, nextFilePairs);
                 newUpload.execute();
             }
 
