@@ -8,9 +8,11 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,6 +31,8 @@ public class WifiFTPBackgroundService extends Service {
     private static Timer timer = new Timer();
     private MyNotificationManager mNotifyManager;
     private ConnectFTP mConnectFTP;
+
+    private boolean isStarted = false;
 
     // if it's already running, don't start another service
     private boolean isUploading = false;
@@ -62,21 +66,42 @@ public class WifiFTPBackgroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        mNotifyManager = new MyNotificationManager(this);
-        mConnectFTP = new ConnectFTP();
+        if (!isStarted) {
 
-        address = getResources().getString(R.string.address);
-        user    = getResources().getString(R.string.user);
-        pw = getResources().getString(R.string.pw);
-        port = getResources().getInteger(R.integer.port);
+            mNotifyManager = new MyNotificationManager(this);
+            mConnectFTP = new ConnectFTP();
 
-        in_dir = getResources().getStringArray(R.array.in_dir);
-        out_dir = getResources().getStringArray(R.array.out_dir);
+            // set defaults
+            address = getResources().getString(R.string.address);
+            user = getResources().getString(R.string.user);
+            pw = getResources().getString(R.string.pw);
+            port = getResources().getInteger(R.integer.port);
+
+            in_dir = getResources().getStringArray(R.array.in_dir);
+            out_dir = getResources().getStringArray(R.array.out_dir);
+
+            // get from bundle
+            Bundle bundle = intent.getExtras();
+            if (bundle != null) {
+                address = bundle.getString("FTP_ADDRESS", address);
+                user = bundle.getString("FTP_USER", user);
+                pw = bundle.getString("FTP_PW", pw);
+                port = bundle.getInt("FTP_PORT", port);
+
+                String[] temp_in_dir = bundle.getStringArray("FTP_READ_DIRS");
+                in_dir = temp_in_dir != null ? temp_in_dir : in_dir;
+
+                String[] temp_out_dir = bundle.getStringArray("FTP_WRITE_DIRS");
+                out_dir = temp_out_dir != null ? temp_out_dir : out_dir;
+            }
 
 
-        // STEP 2 a new "CheckConnectionsTask" is run periodically
-        timer.scheduleAtFixedRate(new CheckConnectionsTask(), BACKGROUND_CHECK_DELAY, BACKGROUND_CHECK_PERIOD);
+            // STEP 2 a new "CheckConnectionsTask" is run periodically
+            timer.scheduleAtFixedRate(new CheckConnectionsTask(), BACKGROUND_CHECK_DELAY, BACKGROUND_CHECK_PERIOD);
 
+            isStarted = true;
+
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -117,6 +142,7 @@ public class WifiFTPBackgroundService extends Service {
                         String inLocation = in_dir[i];
 
                         File directory = new File(Environment.getExternalStorageDirectory() + File.separator + inLocation);
+                        Log.d(TAG, "Checking for files in " + directory.getAbsolutePath());
                         // create if it doesn't already exist
                         if (!directory.exists()) {
                             boolean success = directory.mkdir();
@@ -125,10 +151,11 @@ public class WifiFTPBackgroundService extends Service {
                         }
 
                         File[] filesArray = directory.listFiles();
-
-                        if(filesArray == null || filesArray.length ==0) {
+                        if(filesArray == null) {
+                            Log.wtf(TAG,"Please grant STORAGE permissions to service_ftp");
                             break;
                         }
+                        Log.d(TAG, "Found " + filesArray.length + " files");
 
                         for (File f : filesArray) {
                             // don't add directories, just files...

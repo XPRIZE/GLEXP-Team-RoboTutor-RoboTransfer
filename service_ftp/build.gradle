@@ -1,11 +1,11 @@
-apply plugin: 'com.android.library'
+apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
 
     defaultConfig {
-        minSdkVersion 22
-        targetSdkVersion 22
+        minSdkVersion 23
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
 
@@ -13,19 +13,41 @@ android {
 
     }
 
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    def keystoreProperties = new Properties()
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+    signingConfigs {
+        config {
+            keyAlias keystoreProperties.getProperty('keyAlias')
+            keyPassword keystoreProperties.getProperty('keyPassword')
+            storeFile file(keystoreProperties.getProperty('storeFile'))
+            storePassword keystoreProperties.getProperty('storePassword')
+        }
+    }
+
     publishNonDefault true
 
     buildTypes {
         debug {
-            buildConfigField "String", "FTP_CONFIG", "\"KEVIN_LOCAL_FTP\""
             debuggable true
         }
 
         xprize {
-            buildConfigField "String", "FTP_CONFIG", "\"XPRIZE_FIELD_FTP\""
-
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            signingConfig signingConfigs.config
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+
+            def appName = "RoboTransfer"
+            def buildType = variant.variantData.variantConfiguration.buildType.name
+            output.outputFileName = appName + "-" + buildType + ".apk"
+
         }
     }
 

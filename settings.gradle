@@ -1,1 +1,1 @@
-include ':app', ':library', ':service_ftp'
+include ':service_ftp'
