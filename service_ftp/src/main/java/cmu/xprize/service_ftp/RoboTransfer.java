@@ -3,6 +3,7 @@ package cmu.xprize.service_ftp;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 /**
  * RoboSync
@@ -23,10 +24,25 @@ public class RoboTransfer extends Activity {
 
         if(bundle != null ) {
 
-            ftpIntent.putExtra("FTP_ADDRESS", (String) bundle.get("FTP_ADDRESS"));
-            ftpIntent.putExtra("FTP_USER", (String) bundle.get("FTP_USER"));
-            ftpIntent.putExtra("FTP_PW", (String) bundle.get("FTP_PW"));
-            ftpIntent.putExtra("FTP_PORT", (int) bundle.get("FTP_PORT"));
+            String address = bundle.getString("FTP_ADDRESS");
+            Log.d("DEBUG_TRANSFER", address);
+
+
+            String user = bundle.getString("FTP_USER");
+            user = (user != null) ? user : "";
+            Log.d("DEBUG_TRANSFER", user);
+
+            String pw = bundle.getString("FTP_PW");
+            pw = pw != null ? pw : "";
+            Log.d("DEBUG_TRANSFER", pw);
+            int port = bundle.getInt("FTP_PORT");
+            Log.d("DEBUG_TRANSFER", "" + port);
+
+
+            ftpIntent.putExtra("FTP_ADDRESS", address);
+            ftpIntent.putExtra("FTP_USER", user);
+            ftpIntent.putExtra("FTP_PW", pw);
+            ftpIntent.putExtra("FTP_PORT", port);
 
             ftpIntent.putExtra("FTP_READ_DIRS", (String[]) bundle.get("FTP_READ_DIRS"));
             ftpIntent.putExtra("FTP_WRITE_DIRS", (String[]) bundle.get("FTP_WRITE_DIRS"));
