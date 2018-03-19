@@ -40,6 +40,7 @@ public class WifiFTPBackgroundService extends Service {
     private boolean isUploading = false;
 
     private static final String TAG = "WifiFTPService";
+    private static final String DEBUG_TAG = "DEBUG_LAUNCH";
 
     private static final String SCHEDULE_TYPE = "alarm";
     static final long BACKGROUND_CHECK_DELAY = 0;
@@ -69,7 +70,7 @@ public class WifiFTPBackgroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Log.wtf("DEBUG_ALARM", "WifiFTPBackgroundService");
+        Log.i(DEBUG_TAG, "WifiFTPBackgroundService");
 
         if (!isStarted) {
 

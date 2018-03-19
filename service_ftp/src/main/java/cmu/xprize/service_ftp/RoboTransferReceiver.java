@@ -19,11 +19,12 @@ import java.util.Calendar;
 public class RoboTransferReceiver extends BroadcastReceiver {
 
     private static final String TAG = "RoboTransferReceiver";
+    private static final String DEBUG_TAG = "DEBUG_LAUNCH";
     private final static int INTERVAL_MINUTE = 60000;
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.wtf("DEBUG_BROADCAST", "RoboTransferReceiver");
+        Log.i(DEBUG_TAG, TAG);
 
         Context appContext = context.getApplicationContext();
 
@@ -37,7 +38,7 @@ public class RoboTransferReceiver extends BroadcastReceiver {
 
         PendingIntent alarmIntent = PendingIntent.getService(context, 0, newIntent, 0);
 
-        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), INTERVAL_MINUTE, alarmIntent);
+        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HALF_HOUR, alarmIntent);
 
     }
 
