@@ -14,26 +14,21 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name">
 
-        <activity
-            android:name=".RoboTransfer"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:exported="true">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
-
         <receiver
             android:name=".RoboTransferReceiver"
             android:exported="true"/>
 
+        <receiver
+            android:name=".ScheduleAlarmTest"
+            android:exported="true"/>
+
+        <receiver android:name=".TriggerAlarmTest"
+            android:exported="false"/>
 
         <service
             android:name="cmu.xprize.service_ftp.WifiFTPBackgroundService"
             android:enabled="true"
-            android:exported="true">
+            android:exported="false">
 
         </service>
     </application>

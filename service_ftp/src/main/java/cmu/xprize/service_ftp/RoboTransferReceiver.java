@@ -1,10 +1,14 @@
 package cmu.xprize.service_ftp;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+
+import java.util.Calendar;
 
 /**
  * RoboSync
@@ -15,6 +19,7 @@ import android.util.Log;
 public class RoboTransferReceiver extends BroadcastReceiver {
 
     private static final String TAG = "RoboTransferReceiver";
+    private final static int INTERVAL_MINUTE = 60000;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -54,7 +59,14 @@ public class RoboTransferReceiver extends BroadcastReceiver {
 
         }
 
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
 
-        appContext.startService(newIntent);
+        AlarmManager alarmMgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+        PendingIntent alarmIntent = PendingIntent.getService(context, 0, newIntent, 0);
+
+        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), INTERVAL_MINUTE, alarmIntent);
+
     }
 }

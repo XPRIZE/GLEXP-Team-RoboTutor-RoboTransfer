@@ -1,5 +1,6 @@
 package cmu.xprize.service_ftp;
 
+import android.app.AlarmManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +29,7 @@ import java.util.TimerTask;
  */
 public class WifiFTPBackgroundService extends Service {
 
+
     private static Timer timer = new Timer();
     private MyNotificationManager mNotifyManager;
     private ConnectFTP mConnectFTP;
@@ -39,6 +41,7 @@ public class WifiFTPBackgroundService extends Service {
 
     private static final String TAG = "WifiFTPService";
 
+    private static final String SCHEDULE_TYPE = "alarm";
     static final long BACKGROUND_CHECK_DELAY = 0;
     static final long BACKGROUND_CHECK_PERIOD = 5000;
 
@@ -65,6 +68,8 @@ public class WifiFTPBackgroundService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        Log.wtf("DEBUG_ALARM", "WifiFTPBackgroundService");
 
         if (!isStarted) {
 
@@ -95,11 +100,18 @@ public class WifiFTPBackgroundService extends Service {
                 out_dir = temp_out_dir != null ? temp_out_dir : out_dir;
             }
 
-
             // STEP 2 a new "CheckConnectionsTask" is run periodically
-            timer.scheduleAtFixedRate(new CheckConnectionsTask(), BACKGROUND_CHECK_DELAY, BACKGROUND_CHECK_PERIOD);
+            switch (SCHEDULE_TYPE) {
+                case "timer":
+                    timer.scheduleAtFixedRate(new CheckConnectionsTask(), BACKGROUND_CHECK_DELAY, BACKGROUND_CHECK_PERIOD);
+                    break;
 
-            isStarted = true;
+                case "alarm":
+
+                    timer.schedule(new CheckConnectionsTask(), BACKGROUND_CHECK_DELAY);
+
+                    break;
+            }
 
         }
 
