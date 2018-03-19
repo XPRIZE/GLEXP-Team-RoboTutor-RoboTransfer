@@ -28,10 +28,28 @@ public class RoboTransferReceiver extends BroadcastReceiver {
         Context appContext = context.getApplicationContext();
 
         Intent newIntent = new Intent(appContext, WifiFTPBackgroundService.class);
+        //newIntent = addExtrasToIntent(newIntent);
 
-        // get from bundle
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+
+        AlarmManager alarmMgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+        PendingIntent alarmIntent = PendingIntent.getService(context, 0, newIntent, 0);
+
+        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), INTERVAL_MINUTE, alarmIntent);
+
+    }
+
+    /**
+     * @deprecated FTP info should be defined in RoboTransfer
+     * @param intent
+     * @return
+     */
+    Intent addExtrasToIntent(Intent intent) {
+
+        // if possible, get from bundle
         Bundle bundle = intent.getExtras();
-
         if(bundle != null ) {
 
             String address = bundle.getString("FTP_ADDRESS");
@@ -49,24 +67,19 @@ public class RoboTransferReceiver extends BroadcastReceiver {
             Log.d("DEBUG_TRANSFER", "" + port);
 
 
-            newIntent.putExtra("FTP_ADDRESS", address);
-            newIntent.putExtra("FTP_USER", user);
-            newIntent.putExtra("FTP_PW", pw);
-            newIntent.putExtra("FTP_PORT", port);
+            intent.putExtra("FTP_ADDRESS", address);
+            intent.putExtra("FTP_USER", user);
+            intent.putExtra("FTP_PW", pw);
+            intent.putExtra("FTP_PORT", port);
+            intent.putExtra("FTP_PORT", port);
 
-            newIntent.putExtra("FTP_READ_DIRS", (String[]) bundle.get("FTP_READ_DIRS"));
-            newIntent.putExtra("FTP_WRITE_DIRS", (String[]) bundle.get("FTP_WRITE_DIRS"));
+            intent.putExtra("FTP_READ_DIRS", (String[]) bundle.get("FTP_READ_DIRS"));
+            intent.putExtra("FTP_WRITE_DIRS", (String[]) bundle.get("FTP_WRITE_DIRS"));
 
         }
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-
-        AlarmManager alarmMgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-
-        PendingIntent alarmIntent = PendingIntent.getService(context, 0, newIntent, 0);
-
-        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), INTERVAL_MINUTE, alarmIntent);
-
+        return intent;
     }
+
+
 }

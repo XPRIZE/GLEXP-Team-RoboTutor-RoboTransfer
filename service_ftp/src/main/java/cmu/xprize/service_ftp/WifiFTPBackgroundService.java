@@ -85,20 +85,8 @@ public class WifiFTPBackgroundService extends Service {
             in_dir = getResources().getStringArray(R.array.in_dir);
             out_dir = getResources().getStringArray(R.array.out_dir);
 
-            // get from bundle
-            Bundle bundle = intent.getExtras();
-            if (bundle != null) {
-                address = bundle.getString("FTP_ADDRESS", address);
-                user = bundle.getString("FTP_USER", user);
-                pw = bundle.getString("FTP_PW", pw);
-                port = bundle.getInt("FTP_PORT", port);
+            // retrievExtrasFromIntent(intent);
 
-                String[] temp_in_dir = bundle.getStringArray("FTP_READ_DIRS");
-                in_dir = temp_in_dir != null ? temp_in_dir : in_dir;
-
-                String[] temp_out_dir = bundle.getStringArray("FTP_WRITE_DIRS");
-                out_dir = temp_out_dir != null ? temp_out_dir : out_dir;
-            }
 
             // STEP 2 a new "CheckConnectionsTask" is run periodically
             switch (SCHEDULE_TYPE) {
@@ -118,6 +106,26 @@ public class WifiFTPBackgroundService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
+    /**
+     * @deprecated FTP info can no longer be passed from Intent
+     * @param intent {@link Intent} which started the service
+     */
+    void retrievExtrasFromIntent(Intent intent) {
+        // get from bundle
+        Bundle bundle = intent.getExtras();
+        if (bundle != null) {
+            address = bundle.getString("FTP_ADDRESS", address);
+            user = bundle.getString("FTP_USER", user);
+            pw = bundle.getString("FTP_PW", pw);
+            port = bundle.getInt("FTP_PORT", port);
+
+            String[] temp_in_dir = bundle.getStringArray("FTP_READ_DIRS");
+            in_dir = temp_in_dir != null ? temp_in_dir : in_dir;
+
+            String[] temp_out_dir = bundle.getStringArray("FTP_WRITE_DIRS");
+            out_dir = temp_out_dir != null ? temp_out_dir : out_dir;
+        }
+    }
 
     /**
      * STEP 3 the "run" method of the CheckConnections Task is called
