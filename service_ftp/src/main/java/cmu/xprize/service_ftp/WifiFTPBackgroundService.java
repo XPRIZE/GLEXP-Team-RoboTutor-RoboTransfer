@@ -40,7 +40,7 @@ public class WifiFTPBackgroundService extends Service {
     private boolean isUploading = false;
 
     private static final String TAG = "WifiFTPService";
-    private static final String DEBUG_TAG = "DEBUG_LAUNCH";
+    private static final String DEBUG_TAG = "DEBUG_LAUNCH:FTP";
 
     private static final String SCHEDULE_TYPE = "alarm";
     static final long BACKGROUND_CHECK_DELAY = 0;
@@ -141,18 +141,18 @@ public class WifiFTPBackgroundService extends Service {
                 return;
             }
 
-            Log.d(TAG, "Running CheckConnectionsTask");
+            Log.d(DEBUG_TAG, "Running CheckConnectionsTask");
 
             // STEP 4 checks for wifi connection
             if (isConnectedViaWifi()) {
-                Log.d(TAG, "Connected via Wifi");
+                Log.d(DEBUG_TAG, "Connected via Wifi");
                 String wifiName = getWifiName();
                 mNotifyManager.issueNotification(MyNotificationManager.WIFI_CONNECTION, wifiName);
 
                 // STEP 5 checks for FTP connection
                 boolean connected = mConnectFTP.connect(address, user, pw, port);
                 if(connected) {
-                    Log.d(TAG, "Connected to FTP");
+                    Log.d(DEBUG_TAG, "Connected to FTP");
                     mNotifyManager.issueNotification(MyNotificationManager.FTP_CONNECTION, address);
 
                     ArrayList<FilePair> filePairs = new ArrayList<>();
@@ -163,20 +163,20 @@ public class WifiFTPBackgroundService extends Service {
                         String inLocation = in_dir[i];
 
                         File directory = new File(Environment.getExternalStorageDirectory() + File.separator + inLocation);
-                        Log.d(TAG, "Checking for files in " + directory.getAbsolutePath());
+                        Log.d(DEBUG_TAG, "Checking for files in " + directory.getAbsolutePath());
                         // create if it doesn't already exist
                         if (!directory.exists()) {
                             boolean success = directory.mkdir();
-                            Log.d(TAG, (success ? "success" : "failure") + " creating new directory... " + directory.getName());
+                            Log.d(DEBUG_TAG, (success ? "success" : "failure") + " creating new directory... " + directory.getName());
                             return;
                         }
 
                         File[] filesArray = directory.listFiles();
                         if(filesArray == null) {
-                            Log.wtf(TAG,"Please grant STORAGE permissions to service_ftp");
+                            Log.wtf(DEBUG_TAG,"Please grant STORAGE permissions to service_ftp");
                             break;
                         }
-                        Log.d(TAG, "Found " + filesArray.length + " files");
+                        Log.d(DEBUG_TAG, "Found " + filesArray.length + " files");
 
                         for (File f : filesArray) {
                             // don't add directories, just files...
@@ -199,7 +199,7 @@ public class WifiFTPBackgroundService extends Service {
 
 
             } else {
-                Log.d(TAG, "No connection");
+                Log.d(DEBUG_TAG, "No connection");
                 mNotifyManager.issueNotification(MyNotificationManager.NO_CONNECTION);
             }
 
@@ -231,7 +231,7 @@ public class WifiFTPBackgroundService extends Service {
          */
         @Override
         protected Boolean doInBackground(Boolean... booleans) {
-            Log.w(TAG, "UploadTask.doInBackgrond...  writing " + fp.f.getName() + " to " + fp.out_dir);
+            Log.w(DEBUG_TAG, "UploadTask.doInBackgrond...  writing " + fp.f.getName() + " to " + fp.out_dir);
             mNotifyManager.issueNotification(MyNotificationManager.UPLOADING, fp.f.getName());
 
 
@@ -243,12 +243,12 @@ public class WifiFTPBackgroundService extends Service {
 
         @Override
         protected void onProgressUpdate(Integer... progress) {
-           // Log.w(TAG, "UploadTask.onProgressUpdate: " + progress[0]);
+           // Log.w(DEBUG_TAG, "UploadTask.onProgressUpdate: " + progress[0]);
         }
 
         @Override
         protected void onPostExecute(Boolean result) {
-            Log.w(TAG, "UploadTask.onPostExecute..." + result);
+            Log.w(DEBUG_TAG, "UploadTask.onPostExecute..." + result);
 
             if(result) {
                 mNotifyManager.issueNotification(MyNotificationManager.DONE_UPLOADING, fp.f.getName());

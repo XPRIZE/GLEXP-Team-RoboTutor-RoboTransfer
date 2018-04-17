@@ -20,7 +20,7 @@ public class RoboTransferReceiver extends BroadcastReceiver {
 
     private static final String TAG = "RoboTransferReceiver";
     private static final String DEBUG_TAG = "DEBUG_LAUNCH";
-    private final static int INTERVAL_MINUTE = 60000;
+    private final static long INTERVAL_MINUTE = 60000;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -38,7 +38,28 @@ public class RoboTransferReceiver extends BroadcastReceiver {
 
         PendingIntent alarmIntent = PendingIntent.getService(context, 0, newIntent, 0);
 
-        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HALF_HOUR, alarmIntent);
+        long repeatTime;
+
+        int repeatSetting = appContext.getResources().getInteger(R.integer.repeat_time_minutes);
+        switch(repeatSetting) {
+            case 1:
+                repeatTime = INTERVAL_MINUTE;
+                break;
+            case 15:
+                repeatTime = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+                break;
+            case 30:
+                repeatTime = AlarmManager.INTERVAL_HALF_HOUR;
+                break;
+            case 60:
+            default:
+                repeatTime = AlarmManager.INTERVAL_HOUR;
+                break;
+        }
+
+
+        // REVIEW what would cause alarmMgr to be null?
+        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), repeatTime, alarmIntent);
 
     }
 

@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.util.Properties;
 
 /**
@@ -25,6 +26,8 @@ public class ConnectFTP {
     private static int FTP_PORT = 2121;
 
     private static final String TAG = "ConnectFTP";
+    private static final String DEBUG_TAG = "DEBUG_LAUNCH:FTP";
+
 
     private FTPClient mFtpClient = null;
     private Context mContext = null;
@@ -45,15 +48,21 @@ public class ConnectFTP {
      */
     public boolean connect(String ip, String username, String password, int port) {
         String log = String.format("Connecting to %s/%s with %s:%s", ip, port, username, password);
-        Log.w(TAG, log);
+        Log.w(DEBUG_TAG, log);
         boolean status = false;
 
         try {
-            mFtpClient.connect(ip, port);
+
+            if (port < 0) {
+                mFtpClient.connect(ip);
+            } else {
+                mFtpClient.connect(ip, port);
+            }
             status = mFtpClient.login(username, password);
+            Log.w(DEBUG_TAG, log + (status ? ": SUCCESS" : ": FAILED"));
         } catch (IOException e) {
-            Log.w(TAG, "No FTP connection found");
-            Log.w(TAG, e.getMessage());
+            Log.w(DEBUG_TAG, "No FTP connection found");
+            Log.w(DEBUG_TAG, e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -72,14 +81,14 @@ public class ConnectFTP {
             mFtpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
             boolean dirExists = mFtpClient.changeWorkingDirectory(location);
-            Log.w(TAG, "In directory: " + mFtpClient.printWorkingDirectory());
+            Log.w(DEBUG_TAG, "In directory: " + mFtpClient.printWorkingDirectory());
             if(!dirExists) {
                 boolean dirCreated = mFtpClient.makeDirectory(location);
 
                 if(dirCreated) {
-                    Log.d(TAG, "Directory created: " + location);
+                    Log.d(DEBUG_TAG, "Directory created: " + location);
                 } else {
-                    Log.w(TAG, "Could not create directory: " + location);
+                    Log.w(DEBUG_TAG, "Could not create directory: " + location);
                     //return false;
                 }
             } else {
@@ -91,15 +100,15 @@ public class ConnectFTP {
             String dir = mFtpClient.printWorkingDirectory();
             FTPFile[] dirs = mFtpClient.listDirectories();
             for (FTPFile ftpDir : dirs) {
-                Log.d(TAG, ftpDir.getName());
+                Log.d(DEBUG_TAG, ftpDir.getName());
             }
-            Log.i(TAG, dir);
+            Log.i(DEBUG_TAG, dir);
             FileInputStream srcFileStream = new FileInputStream(file);
 
             String writeTo = location + File.separator + file.getName();
 
             boolean status = mFtpClient.storeFile(writeTo, srcFileStream);
-            Log.e(TAG, "uploadFile status=" + status);
+            Log.e(DEBUG_TAG, "uploadFile status=" + status);
             srcFileStream.close();
             return status;
 
