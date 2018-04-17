@@ -38,6 +38,12 @@ android {
 
             debuggable true
         }
+
+        vmc {
+            signingConfig signingConfigs.config
+
+            debuggable true
+        }
     }
 
     applicationVariants.all { variant ->

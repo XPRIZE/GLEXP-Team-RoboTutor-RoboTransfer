@@ -2,7 +2,7 @@
 <resources>
     <string name="address">192.168.0.1</string>
     <string name="user">anonymous</string>
-    <string name="pw">xprizexprize</string>
+    <string name="pw"></string>
     <integer name="port">21</integer>
 
     <string-array name="in_dir">

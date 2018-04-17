@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="address">192.168.0.1</string>
+    <string name="address">128.237.188.39</string>
     <string name="user">anonymous</string>
-    <string name="pw">xprizexprize</string>
-    <integer name="port">21</integer>
+    <string name="pw"></string>
+    <integer name="port">2121</integer>
 
     <string-array name="in_dir">
         <item>RoboTutor</item>
