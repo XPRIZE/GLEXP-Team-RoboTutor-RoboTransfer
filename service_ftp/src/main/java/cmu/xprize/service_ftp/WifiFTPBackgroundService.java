@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import cmu.xprize.service_ftp.logging.CLogManager;
+
 
 /**
  * MyNotificationManager
@@ -71,17 +73,45 @@ public class WifiFTPBackgroundService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         Log.i(DEBUG_TAG, "WifiFTPBackgroundService");
+        CLogManager.getInstance().postEvent_I(TAG, "onStartCommand");
 
         if (!isStarted) {
 
             mNotifyManager = new MyNotificationManager(this);
             mConnectFTP = new ConnectFTP();
 
-            // set defaults
-            address = getResources().getString(R.string.address);
-            user = getResources().getString(R.string.user);
-            pw = getResources().getString(R.string.pw);
-            port = getResources().getInteger(R.integer.port);
+            int addressConfig, userConfig, pwConfig, portConfig;
+            switch(BuildConfig.FTP_CONFIG) {
+                // set defaults
+                case "LOCAL":
+                    addressConfig = R.string.address_local;
+                    userConfig = R.string.user_local;
+                    pwConfig = R.string.pw_local;
+                    portConfig = R.integer.port_local;
+                    break;
+                    
+                case "VMC":
+                    addressConfig = R.string.address_vmc;
+                    userConfig = R.string.user_vmc;
+                    pwConfig = R.string.pw_vmc;
+                    portConfig = R.integer.port_vmc;
+                    break;
+
+                case "XPRIZE":
+                default:
+                    addressConfig = R.string.address_xprize;
+                    userConfig = R.string.user_xprize;
+                    pwConfig = R.string.pw_xprize;
+                    portConfig = R.integer.port_xprize;
+
+
+                    break;
+            }
+
+            address = getResources().getString(addressConfig);
+            user = getResources().getString(userConfig);
+            pw = getResources().getString(pwConfig);
+            port = getResources().getInteger(portConfig);
 
             in_dir = getResources().getStringArray(R.array.in_dir);
             out_dir = getResources().getStringArray(R.array.out_dir);
@@ -93,12 +123,14 @@ public class WifiFTPBackgroundService extends Service {
             switch (SCHEDULE_TYPE) {
                 case "timer":
                     timer.scheduleAtFixedRate(new CheckConnectionsTask(), BACKGROUND_CHECK_DELAY, BACKGROUND_CHECK_PERIOD);
+                    CLogManager.getInstance().postEvent_I(TAG, "schedule timer");
                     break;
 
                 case "alarm":
 
                     timer.schedule(new CheckConnectionsTask(), BACKGROUND_CHECK_DELAY);
 
+                    CLogManager.getInstance().postEvent_I(TAG, "schedule alarm");
                     break;
             }
 
@@ -142,10 +174,12 @@ public class WifiFTPBackgroundService extends Service {
             }
 
             Log.d(DEBUG_TAG, "Running CheckConnectionsTask");
+            CLogManager.getInstance().postEvent_I(TAG, "Running CheckConnectionsTask");
 
             // STEP 4 checks for wifi connection
             if (isConnectedViaWifi()) {
                 Log.d(DEBUG_TAG, "Connected via Wifi");
+                CLogManager.getInstance().postEvent_I(TAG, "Connected via Wifi");
                 String wifiName = getWifiName();
                 mNotifyManager.issueNotification(MyNotificationManager.WIFI_CONNECTION, wifiName);
 
@@ -153,6 +187,8 @@ public class WifiFTPBackgroundService extends Service {
                 boolean connected = mConnectFTP.connect(address, user, pw, port);
                 if(connected) {
                     Log.d(DEBUG_TAG, "Connected to FTP");
+                    CLogManager.getInstance().postEvent_I(TAG, "Connected to FTP");
+
                     mNotifyManager.issueNotification(MyNotificationManager.FTP_CONNECTION, address);
 
                     ArrayList<FilePair> filePairs = new ArrayList<>();
@@ -164,6 +200,7 @@ public class WifiFTPBackgroundService extends Service {
 
                         File directory = new File(Environment.getExternalStorageDirectory() + File.separator + inLocation);
                         Log.d(DEBUG_TAG, "Checking for files in " + directory.getAbsolutePath());
+                        CLogManager.getInstance().postEvent_I(TAG, "Checking for files in " + directory.getAbsolutePath());
                         // create if it doesn't already exist
                         if (!directory.exists()) {
                             boolean success = directory.mkdir();
@@ -174,6 +211,7 @@ public class WifiFTPBackgroundService extends Service {
                         File[] filesArray = directory.listFiles();
                         if(filesArray == null) {
                             Log.wtf(DEBUG_TAG,"Please grant STORAGE permissions to service_ftp");
+                            CLogManager.getInstance().postEvent_I(TAG, "Please grant STORAGE permissions to service_ftp");
                             break;
                         }
                         Log.d(DEBUG_TAG, "Found " + filesArray.length + " files");
@@ -192,6 +230,8 @@ public class WifiFTPBackgroundService extends Service {
                         mNotifyManager.issueNotification(MyNotificationManager.FOUND_FILES, String.valueOf(filePairs.size()));
                         // STEP 7 begin transferring files
                         beginFileTransfer(filePairs);
+                    } else {
+                        mConnectFTP.disconnect();
                     }
 
 
@@ -200,6 +240,7 @@ public class WifiFTPBackgroundService extends Service {
 
             } else {
                 Log.d(DEBUG_TAG, "No connection");
+                CLogManager.getInstance().postEvent_I(TAG, "NO CONNECTION");
                 mNotifyManager.issueNotification(MyNotificationManager.NO_CONNECTION);
             }
 
@@ -232,6 +273,7 @@ public class WifiFTPBackgroundService extends Service {
         @Override
         protected Boolean doInBackground(Boolean... booleans) {
             Log.w(DEBUG_TAG, "UploadTask.doInBackgrond...  writing " + fp.f.getName() + " to " + fp.out_dir);
+            CLogManager.getInstance().postEvent_I(TAG, "UploadTask.doInBackground...");
             mNotifyManager.issueNotification(MyNotificationManager.UPLOADING, fp.f.getName());
 
 
@@ -249,14 +291,19 @@ public class WifiFTPBackgroundService extends Service {
         @Override
         protected void onPostExecute(Boolean result) {
             Log.w(DEBUG_TAG, "UploadTask.onPostExecute..." + result);
+            CLogManager.getInstance().postEvent_I(TAG, "UploadTask.onPostExecute...");
 
             if(result) {
                 mNotifyManager.issueNotification(MyNotificationManager.DONE_UPLOADING, fp.f.getName());
                 fp.f.delete();
+                CLogManager.getInstance().postEvent_I(TAG, "successfully uploaded " + fp.f.getName());
             }
 
             if(nextFilePairs.isEmpty()) {
                 isUploading = false;
+                CLogManager.getInstance().postEvent_I(TAG, "Done uploading!");
+                mConnectFTP.disconnect();
+
             } else {
                 FilePair nextFp = nextFilePairs.remove(0);
                 UploadTask newUpload = new UploadTask(nextFp, nextFilePairs);

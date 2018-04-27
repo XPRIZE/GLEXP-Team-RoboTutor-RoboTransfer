@@ -33,7 +33,16 @@ android {
             debuggable true
         }
 
+        local {
+            buildConfigField "String", "FTP_CONFIG", "\"LOCAL\""
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            signingConfig signingConfigs.config
+        }
+
         xprize {
+            buildConfigField "String", "FTP_CONFIG", "\"XPRIZE\""
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
@@ -41,6 +50,7 @@ android {
         }
 
         vmc {
+            buildConfigField "String", "FTP_CONFIG", "\"VMC\""
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 

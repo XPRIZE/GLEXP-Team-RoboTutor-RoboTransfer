@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="address">192.168.0.1</string>
-    <string name="user">anonymous</string>
-    <string name="pw">xprizexprize</string>
-    <integer name="port">21</integer>
+    <!-- begin local -->
+    <string name="address_local">192.168.43.123</string>
+    <string name="user_local">ftp</string>
+    <string name="pw_local">ftp</string>
+    <integer name="port_local">2121</integer>
 
+
+    <!-- begin vmc -->
+    <string name="address_vmc">192.168.0.1</string>
+    <string name="user_vmc">anonymous</string>
+    <string name="pw_vmc"></string>
+    <integer name="port_vmc">21</integer>
+
+    <!-- begin xprize -->
+    <string name="address_xprize">192.168.0.1</string>
+    <string name="user_xprize">anonymous</string>
+    <string name="pw_xprize"></string>
+    <integer name="port_xprize">21</integer>
+
+
+    <!-- folder configs -->
     <string-array name="in_dir">
         <item>RoboTutor</item>
     </string-array>
@@ -13,5 +29,5 @@
         <item>remote</item>
     </string-array>
 
-    <integer name="repeat_time_minutes">1</integer>
+    <integer name="repeat_time_minutes">30</integer>
 </resources>

@@ -5,10 +5,19 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+
+import cmu.xprize.service_ftp.logging.CErrorManager;
+import cmu.xprize.service_ftp.logging.CLogManager;
+import cmu.xprize.service_ftp.logging.ILogManager;
+import cmu.xprize.service_ftp.logging.TLOG_CONST;
 
 /**
  * RoboSync
@@ -22,9 +31,27 @@ public class RoboTransferReceiver extends BroadcastReceiver {
     private static final String DEBUG_TAG = "DEBUG_LAUNCH";
     private final static long INTERVAL_MINUTE = 60000;
 
+    // logging stuff
+    static public ILogManager logManager;
+    String FTP_LOG_PATH = Environment.getExternalStorageDirectory() + "/FTP/";
+
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i(DEBUG_TAG, TAG);
+
+        // Start logging
+
+        logManager = CLogManager.getInstance();
+
+        String initTime     = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+        String logFilename  = "FTP_" + initTime;
+
+        logManager.startLogging(FTP_LOG_PATH, logFilename);
+        CErrorManager.setLogManager(logManager);
+
+        logManager.postDateTimeStamp(TAG, "onReceive");
+
 
         Context appContext = context.getApplicationContext();
 
@@ -57,6 +84,7 @@ public class RoboTransferReceiver extends BroadcastReceiver {
                 break;
         }
 
+        logManager.postEvent_I(TAG, "RepeatTime:" + String.valueOf(repeatSetting));
 
         // REVIEW what would cause alarmMgr to be null?
         alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), repeatTime, alarmIntent);

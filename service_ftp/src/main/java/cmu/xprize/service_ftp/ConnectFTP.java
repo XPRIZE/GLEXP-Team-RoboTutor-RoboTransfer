@@ -14,6 +14,8 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.Properties;
 
+import cmu.xprize.service_ftp.logging.CLogManager;
+
 /**
  * ConnectFTP
  * <p>
@@ -47,8 +49,9 @@ public class ConnectFTP {
      * @return
      */
     public boolean connect(String ip, String username, String password, int port) {
-        String log = String.format("Connecting to %s/%s with %s:%s", ip, port, username, password);
+        String log = String.format("Connecting to %s/%s with %s %s", ip, port, username, password);
         Log.w(DEBUG_TAG, log);
+        CLogManager.getInstance().postEvent_I(TAG, log);
         boolean status = false;
 
         try {
@@ -60,9 +63,12 @@ public class ConnectFTP {
             }
             status = mFtpClient.login(username, password);
             Log.w(DEBUG_TAG, log + (status ? ": SUCCESS" : ": FAILED"));
+            CLogManager.getInstance().postEvent_I(TAG, log + (status ? ": SUCCESS" : ": FAILED"));
         } catch (IOException e) {
             Log.w(DEBUG_TAG, "No FTP connection found");
             Log.w(DEBUG_TAG, e.getMessage());
+            CLogManager.getInstance().postEvent_E(TAG, "No FTP connection found!");
+            CLogManager.getInstance().postEvent_E(TAG, e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -82,13 +88,16 @@ public class ConnectFTP {
 
             boolean dirExists = mFtpClient.changeWorkingDirectory(location);
             Log.w(DEBUG_TAG, "In directory: " + mFtpClient.printWorkingDirectory());
+            CLogManager.getInstance().postEvent_I(TAG, "In directory: " + mFtpClient.printWorkingDirectory());
             if(!dirExists) {
                 boolean dirCreated = mFtpClient.makeDirectory(location);
 
                 if(dirCreated) {
                     Log.d(DEBUG_TAG, "Directory created: " + location);
+                    CLogManager.getInstance().postEvent_I(TAG, "Directory created: " + location);
                 } else {
                     Log.w(DEBUG_TAG, "Could not create directory: " + location);
+                    CLogManager.getInstance().postEvent_I(TAG, "Could not create directory: " + location);
                     //return false;
                 }
             } else {
@@ -103,18 +112,35 @@ public class ConnectFTP {
                 Log.d(DEBUG_TAG, ftpDir.getName());
             }
             Log.i(DEBUG_TAG, dir);
+            CLogManager.getInstance().postEvent_I(TAG, dir);
             FileInputStream srcFileStream = new FileInputStream(file);
 
             String writeTo = location + File.separator + file.getName();
 
             boolean status = mFtpClient.storeFile(writeTo, srcFileStream);
             Log.e(DEBUG_TAG, "uploadFile status=" + status);
+            CLogManager.getInstance().postEvent_I(TAG, "uploadFfile status=" + status);
             srcFileStream.close();
             return status;
 
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * to be called after client is done uploading...s
+     */
+    public void disconnect() {
+        CLogManager.getInstance().postEvent_I(TAG, "disconnecting from FTP...");
+
+        try {
+            mFtpClient.disconnect();
+            CLogManager.getInstance().postEvent_I(TAG, "successfully disconnected");
+        } catch (IOException e) {
+            e.printStackTrace();
+            CLogManager.getInstance().postEvent_E(TAG, "Error disconnecting... " + e.getMessage());
         }
     }
 }
