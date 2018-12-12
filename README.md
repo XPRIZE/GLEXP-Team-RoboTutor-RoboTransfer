@@ -1,5 +1,7 @@
 ## RoboTransfer
 
+This version was uploaded to XPRIZE on 11/20/2018.  For subsequent changes, see https://github.com/RoboTutorLLC/RoboFiles.
+
 ### Steps for generating APK
 
 1. Clone into a local repo.
